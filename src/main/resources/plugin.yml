@@ -1,0 +1,11 @@
+name: BossAnnouncer
+version: '${project.version}'
+main: dev.kripton.bossannouncer.BossAnnouncer
+api-version: 1.18
+authors: [ Legionary ]
+description: Allows you to make an announcement by changing the boss name
+website: kripton.tech
+depend: [ProtocolLib, PlaceholderAPI]
+commands:
+  announce:
+    usage: /announce
