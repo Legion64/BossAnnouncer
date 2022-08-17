@@ -1,13 +1,15 @@
 progress: 100
 
-lines:
-  - "Test Line 1"
-  - "Test Line 2"
-  - "Test Line 3"
-
-colors:
-  - YELLOW
-  - GOLD
-
-# Type in seconds
-duration: 2
+announces:
+  announce1:
+    title: "Test Line1"
+    bar:
+      color: GREEN
+      style: SOLID
+    duration: 2
+  announce2:
+    title: "Test Line1"
+    bar:
+      color: GREEN
+      style: SOLID
+    duration: 2

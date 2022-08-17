@@ -15,7 +15,8 @@
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <build.path>C:/Users/mmeli/OneDrive/Masaüstü/07636939-cb1d-47c3-96f0-084b0a7b7ed0/plugins</build.path>
+        <!-- C:/Users/mmeli/OneDrive/Masaüstü/07636939-cb1d-47c3-96f0-084b0a7b7ed0/plugins -->
+        <build.path>.</build.path>
     </properties>
     <url>kripton.tech</url>
 
@@ -41,7 +42,6 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>/deneme</outputDirectory>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>
@@ -53,7 +53,7 @@
                 <version>3.2.2</version>
                 <configuration>
                     <finalName>${project.name}-${project.version}</finalName>
-                    <outputDirectory>${build.path}</outputDirectory>
+<!--                    <outputDirectory>${build.path}</outputDirectory>-->
                 </configuration>
             </plugin>
         </plugins>

@@ -3,99 +3,105 @@ package dev.kripton.bossannouncer.tasks;
 import com.google.inject.Inject;
 import dev.kripton.bossannouncer.BossAnnouncer;
 import dev.kripton.bossannouncer.announce.AnnounceBar;
-import lombok.Getter;
+import dev.kripton.bossannouncer.announce.AnnounceInitializer;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.ChatColor;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 
 public class BossBarTask extends BukkitRunnable implements IBossBar {
 
-    /**
-     * Mapping boss bars
-     */
-    public static Map<Player, BossBar> bossBarMap = new HashMap<>();
+    protected BossBar currentBossBar;
 
-    protected List<AnnounceBar> bars = new ArrayList<>();
+    protected AnnounceBar currentBar;
+
+    protected List<Player> boundedPlayers = new ArrayList<>();
+
+    protected BossAnnouncer plugin;
+
+    protected AnnounceInitializer initializer;
 
     protected long previousTime = System.currentTimeMillis();
 
     protected float remainTime;
 
-    /**
-     * Current row index
-     */
-    protected int current = 0;
-
-    protected BossAnnouncer plugin;
-
-    protected List<String> lines;
+    protected int barIndex = 0;
 
     @Inject
-    public BossBarTask(BossAnnouncer plugin) {
+    public BossBarTask(BossAnnouncer plugin, AnnounceInitializer initializer) {
         this.plugin = plugin;
-        this.lines = plugin.getConfig().getStringList("lines");
+        this.initializer = initializer;
 
-        for (String line : this.lines) {
-            bars.add(new AnnounceBar(
-                    ChatColor.translateAlternateColorCodes('&', line), BarColor.BLUE, BarStyle.SOLID, 5));
-        }
+        initializer.initialize();
+        currentBar = initializer.getBars().get(barIndex);
+        currentBossBar = createBossBar(currentBar);
+        remainTime = currentBar.getRemainTime();
 
-        this.remainTime = bars.get(0).getRemainTime();
+        // TODO: BossBar için gerekli olan AnnounceBar çekildi. İlk barın otomatik olarak tanımlanması yapılacak.
+        // TODO: Her AnnounceBar ın config yml üzerinde belirlenen duration süresine göre bar seçimleri yapılacak.
+        // TODO: BossBar title için PlaceholderAPI desteği getirilecek.
+        // TODO: Oyuncunun oyundan çıkması, pluginin yeniden başlatılması gibi durumlarda bossbarlar bütün oyunculardan kaldırılacak.
     }
 
     @Override
     public void run() {
-        float deltaTime = (System.currentTimeMillis() - previousTime) / 1000F;
-        previousTime = System.currentTimeMillis();
+        Collection<? extends Player> playerList = plugin.getServer().getOnlinePlayers();
+
+        long time = System.currentTimeMillis();
+        float deltaTime = (time - previousTime) / 1_000F;
+        previousTime = time;
 
         remainTime -= deltaTime;
         if (remainTime < 0) {
-            if (current == bars.size() - 1) current = 0;
-            else current++;
-            remainTime = bars.get(current).getRemainTime();
+            if (barIndex == initializer.getBars().size()) {
+                barIndex = 0;
+            }
+
+            currentBossBar.removeAll();
+            currentBar = initializer.getBars().get(barIndex++);
+            remainTime = currentBar.getRemainTime();
+            currentBossBar = createBossBar(currentBar);
         }
 
-        for (Player p : plugin.getServer().getOnlinePlayers()) {
-            if (!bossBarMap.containsKey(p)) {
-                bossBarMap.put(p, currentBossBar(bars.get(current), p));
-            }
-            if (bossBarMap.containsKey(p)){
-                AnnounceBar currentBar = bars.get(current);
-                BossBar bossBar = bossBarMap.get(p);
-                bossBar.setTitle(currentBar.getTitle());
-                bossBar.setColor(currentBar.getColor());
-                bossBar.setStyle(currentBar.getStyle());
+        for (Player p : playerList) {
+            currentBossBar.setTitle(
+                    ChatColor.translateAlternateColorCodes('&',
+                            PlaceholderAPI.setPlaceholders(p, currentBossBar.getTitle()))
+            );
+            if (!currentBossBar.getPlayers().contains(p)) {
+                currentBossBar.addPlayer(p);
             }
         }
-    }
-
-    private BossBar currentBossBar(AnnounceBar bar, Player p) {
-        BossBar bossBar = plugin.getServer().createBossBar(
-                bar.getTitle(),
-                bar.getColor(),
-                bar.getStyle()
-        );
-
-        bossBar.addPlayer(p);
-        return bossBar;
     }
 
     @Override
     public void startTask() {
-        this.runTaskTimer(plugin, 5L, 5L);
+        this.runTaskTimer(plugin, 0, 1L);
     }
 
     @Override
-    public void stopTask(){
-        for(Map.Entry<Player, BossBar> entry : bossBarMap.entrySet()){
-            entry.getValue().removeAll();
-        }
-        bossBarMap.clear();
+    public void stopTask() {
+        currentBossBar.removeAll();
         this.cancel();
+    }
+
+    private AnnounceBar getCurrentBar(int index) {
+        return initializer.getBars().get(index);
+    }
+
+    private BossBar createBossBar(AnnounceBar bar) {
+        return plugin.getServer().createBossBar(
+                bar.getTitle(),
+                bar.getBarColor(),
+                bar.getBarStyle()
+        );
     }
 }

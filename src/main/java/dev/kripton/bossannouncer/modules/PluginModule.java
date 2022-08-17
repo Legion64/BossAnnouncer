@@ -1,6 +1,7 @@
 package dev.kripton.bossannouncer.modules;
 
 import com.google.inject.AbstractModule;
+import dev.kripton.bossannouncer.announce.AnnounceInitializer;
 import dev.kripton.bossannouncer.tasks.BossBarTask;
 
 public abstract class PluginModule extends AbstractModule {
@@ -16,6 +17,9 @@ public abstract class PluginModule extends AbstractModule {
 
         // Tasks
         bind(BossBarTask.class).asEagerSingleton();
+
+        // Others
+        bind(AnnounceInitializer.class).asEagerSingleton();
     }
 
 }
