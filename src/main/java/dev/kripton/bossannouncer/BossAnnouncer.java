@@ -57,18 +57,4 @@ public final class BossAnnouncer extends JavaPlugin implements Listener {
     public void onDisable() {
         bossBarTask.stopTask();
     }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onJoin(PlayerJoinEvent event) {
-        String joinText = "%player_name% &ajoined the server! They are rank &f%vault_rank%";
-
-        /*
-         * We parse the placeholders using "setPlaceholders"
-         * This would turn %vault_rank% into the name of the Group, that the
-         * joining player has.
-         */
-        joinText = PlaceholderAPI.setPlaceholders(event.getPlayer(), joinText);
-
-        event.setJoinMessage(joinText);
-    }
 }
